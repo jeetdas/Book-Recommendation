@@ -2,6 +2,77 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <vector>
+
+using namespace std;
+
+
+void merge(std::vector<int>& array, std::vector<int>& result, int lowPointer, int highPointer, int upperBound)
+{
+	int j = 0;
+	int lowerBound = lowPointer;
+	int mid = highPointer - 1;
+	int n = upperBound - lowerBound + 1; //number of items
+
+	++comparisonCount;
+	while (lowPointer <= mid && highPointer <= upperBound) {
+		comparisonCount += 2;
+
+		++comparisonCount;
+		if (array[lowPointer] < array[highPointer])
+		{
+			++exchangeCount;
+			result[j++] = array[lowPointer++];
+		}
+		else
+		{
+			++exchangeCount;
+			result[j++] = array[highPointer++];
+		}
+	}
+
+	++comparisonCount;
+	while (lowPointer <= mid)
+	{
+		++comparisonCount;
+		++exchangeCount;
+		result[j++] = array[lowPointer++];
+	}
+
+	++comparisonCount;
+	while (highPointer <= upperBound)
+	{
+		++comparisonCount;
+		++exchangeCount;
+		result[j++] = array[highPointer++];
+	}
+
+
+	for (j = 0; j < n; j++) //copy the items
+	{
+		++exchangeCount;
+		array[lowerBound + j] = result[j];
+	}
+}
+
+void mergesort(std::vector<int>& array, std::vector<int>& result, int lowerBand, int upperBand) {
+	int midpoint;
+	++comparisonCount;
+	if (lowerBand < upperBand) {
+		midpoint = (lowerBand + upperBand) / 2;
+		mergesort(array, result, lowerBand, midpoint); //left half
+		mergesort(array, result, midpoint + 1, upperBand); //right half
+		merge(array, result, lowerBand, midpoint + 1, upperBand);
+	}
+}
+
+void mergeSort(std::vector<int>& array) {
+	std::vector<int> result = array;
+	mergesort(array, result, 0, array.size() - 1);
+}
+
+
+
 
 template<class K, class T>
 void show_map(std::map<K, T> &m);
@@ -11,6 +82,8 @@ void read_two_column_list(std::map<K, T> &m, std::string fileName);
 
 std::map<int, std::map<long, int> > read_ratings();
 void show_ratings_map(std::map <int, std::map<long, int> > &m);
+
+
 
 int main()
 {
