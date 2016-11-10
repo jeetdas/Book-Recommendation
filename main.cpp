@@ -28,7 +28,7 @@ bool findItem(std::map<TA, KA> &m, TA searchItem);
 
 int searchBook(std::map <int, std::string> &book_list);
 
-void updateBook(std::map <int, std::string> b_list ,int isbn);
+bool updateBook(std::map <int, std::string> b_list ,int isbn, int userID);
 
 int recommendBook(std::map <int, std::map<int, int> > ratings, int userId);
 
@@ -90,20 +90,32 @@ void menu()
 	}
 }
 
-//updare
-void updateBook(std::map<int, std::string> b_list ,int isbn)
+//update
+bool updateBook(std::map<int, std::string> b_list, int isbn, int userID)
 {
+
 	// To update:
 	int new_rating;
-	std::cin >> new_rating;
-	b_list[isbn] = new_rating;
-
-
 
 	// save to respective files
-
-	// return true if everything worked
-	// else false
+	if (findItem(b_list, isbn))// if ISBN is found
+	{
+		std::ofstream outputFile("./Sample Data/ratings.txt"); //outstream for file
+		std::cout << "Enter a rating between 1-5";
+		std::cin >> new_rating;
+		b_list[isbn] = new_rating; //updates the map
+		while (outputFile.good())
+		{
+			outputFile << usrID << ", " << new_rating << ", " << isbn; //updates the file for new rated book
+		}
+		outputFile.close();
+		return true; //everything worked
+	}
+	else
+	{
+		std::cout << "ISBN you entered could not be found" << std::endl;
+		return false; //book could not be rated
+	}
 }
 
 template<class K, class T>
