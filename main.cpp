@@ -42,6 +42,7 @@ int main()
 	return 0;
 }
 
+
 void menu()
 {
 	int option = 0;
@@ -62,7 +63,7 @@ void menu()
 		std::cout << "1. Search book" << std::endl;
 		std::cout << "2. Rate book" << std::endl;
 		std::cout << "3. Recommend a book" << std::endl;
-		std::cout << "4. Quit (Please choose this option to protect your data" << std::endl;
+		std::cout << "4. Quit (Please choose this option to protect your data)" << std::endl;
 
 		std::cin >> option;
 
@@ -89,12 +90,15 @@ void menu()
 	}
 }
 
+//updare
 void updateBook(std::map<int, std::string> b_list ,int isbn)
 {
 	// To update:
-	// int new_rating;
-	// std::cin >> new_rating;
-	// b_list[isbn] = new_rating;
+	int new_rating;
+	std::cin >> new_rating;
+	b_list[isbn] = new_rating;
+
+
 
 	// save to respective files
 
@@ -309,6 +313,25 @@ int searchBook(std::map <int, std::string> &book_list)
 	else
 	{
 		// Search through book titles
+		
+		searchItem.erase( remove( searchItem.begin(), searchItem.end(), ' ' ), searchItem.end() );
+		(string)lolower(searchItem);
+
+		if(findItem(searchItem, )) //not sure what to put 
+			{
+				
+				std::cout << book_list[b] << std::endl;
+				return b;
+			}
+		else
+		{
+			std::cout <<"Book Not Found" << std::endl;
+			return -1;
+		}
+
+
+
+
 		return -1;
 	}
 }
