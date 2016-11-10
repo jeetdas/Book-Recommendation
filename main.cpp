@@ -79,7 +79,7 @@ void menu()
 				}
 				break;
 			case 3:
-				recISBN = recommendBook(ratings, 6);
+				recISBN = recommendBook(ratings, 0);
 				std::cout << "Recommended Book -> " << book_list[recISBN] << std::endl;
 				break;
 			case 4:
@@ -205,12 +205,14 @@ int jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &us
 	 *    Else, add minimum (zero) to numerator.
 	 * 4. If found with both users, add maximum score to denominator.
 	 *    Else, add maximum (five) to denominator.
+	 * 5. 
 	 */
 
 	std::set<int> isbn_list;
 	std::map<int, int>::iterator it1, it2;
 
 	double numerator = 0, denominator = 0, score;
+	int count = 0;
 
 	//it = m.find(searchItem);
 	//return (it != m.end());
@@ -222,6 +224,7 @@ int jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &us
 	{
 		if (user1.find(*it) != user1.end() && user2.find(*it) != user2.end())
 		{
+			count += 1;
 			// If found with both users
 			numerator += std::min(user1[*it], user2[*it]);
 			denominator += std::max(user1[*it], user2[*it]);
@@ -234,13 +237,17 @@ int jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &us
 
 	//std::cout << score << std::endl;
 
-	return score;
+	// If user doesn't have anymore books, return 0
+	if (count == user2.size())
+		return 0;
+	else
+		return score;
 }
 
 int recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 {
 	double maxVal = 0, val;
-	int u;
+	int u, maxRating = 0, recomBook;
 	for (int i = 0; i < ratings.size(); ++i)
 	{
 		if (i != userId)
@@ -253,13 +260,22 @@ int recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 			}
 		}
 	}
-
-	// check if that user has more books
-	// find first unrated book
-	// recommend the book
-
+	
+	// [✓] check if that user has more books
 	std::cout << " u = " << u << std::endl;
-	return u;
+
+	// [✓] find first unrated book
+	for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
+	{
+		if ((*it).second > maxRating && ratings[userId].find((*it).first) != ratings[u].end())
+		{
+			maxRating = (*it).second;
+			recomBook = (*it).first;
+		}
+	}
+
+	// [✓] recommend the book
+	return recomBook;
 }
 
 int LevenshteinDistance(std::string s, int len_s, std::string t, int len_t)
@@ -269,8 +285,10 @@ int LevenshteinDistance(std::string s, int len_s, std::string t, int len_t)
 	int cost;
 
 	/* base case: empty strings */
-	if (len_s == 0) return len_t;
-	if (len_t == 0) return len_s;
+	if (len_s == 0)
+		return len_t;
+	if (len_t == 0)
+		return len_s;
 
 	/* test if last characters of the strings match */
 	if (s[len_s-1] == t[len_t-1])
