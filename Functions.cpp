@@ -250,17 +250,14 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 		for (std::map<int, std::string>::iterator m_it = book_list.begin(); m_it != book_list.end(); ++m_it)
 		{
 			b_title = (*m_it).second;
+
 			b_title.erase(std::remove(b_title.begin(), b_title.end(), ' '), b_title.end());
 			std::transform(b_title.begin(), b_title.end(), b_title.begin(), ::tolower);
 			b_title.erase(std::remove(b_title.begin(), b_title.end(), '\n'), b_title.end());
 
-			std::cout << "##lalal -----" << b_title << "--" << std::endl;
-			std::cout << "##BLBLL -----" << searchItem << "--" << std::endl;
-
 			if (b_title == searchItem)
 			{
-				std::cout << "FOund" << std::endl;
-				return (*m_it).first;
+				return (*m_it).second;
 			}
 			
 		}
