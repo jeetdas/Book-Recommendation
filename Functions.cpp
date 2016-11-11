@@ -6,6 +6,7 @@ bookRecommend::bookRecommend()
 {
 	menu();
 }
+
 void bookRecommend::menu()
 {
 	int option = 0;
@@ -21,25 +22,37 @@ void bookRecommend::menu()
 	//show_map(book_list);
 	//show_ratings_map(ratings);
 
-	while (!(option >= 1 && option <= 4))
+	while (true)
 	{
 		std::cout << "1. Search book" << std::endl;
 		std::cout << "2. Rate book" << std::endl;
 		std::cout << "3. Recommend a book" << std::endl;
-		std::cout << "4. Quit (Please choose this option to protect your data" << std::endl;
+		std::cout << "4. Quit (Please choose this option to protect your data)" << std::endl;
 
 		std::cin >> option;
 
+		int searchedBookISBN = -1, recISBN;
 		switch (option)
 		{
-			int searchedBookISBN, recISBN;
 		case 1:
 			searchedBookISBN = searchBook(book_list);
+			if (searchedBookISBN != -1)
+			{
+				std::cout << "Book found" << std::endl;
+			}
 			break;
 		case 2:
 			if (searchedBookISBN != -1)
 			{
 				updateBook(book_list, searchedBookISBN, 6);
+			}
+			else
+			{
+				searchedBookISBN = searchBook(book_list);
+				if (searchedBookISBN != -1)
+				{
+					std::cout << "Book found" << std::endl;
+				}
 			}
 			break;
 		case 3:
@@ -52,6 +65,7 @@ void bookRecommend::menu()
 		}
 	}
 }
+
 template<class K, class T>
 void bookRecommend::show_map(std::map<K, T> &m)
 {
@@ -60,6 +74,7 @@ void bookRecommend::show_map(std::map<K, T> &m)
 		std::cout << it->first << " --> " << it->second << "\n";
 	}
 }
+
 template<class K, class T>
 void bookRecommend::read_two_column_list(std::map<K, T> &m, std::string fileName)
 {
@@ -87,6 +102,7 @@ void bookRecommend::read_two_column_list(std::map<K, T> &m, std::string fileName
 
 	inputFile.close();
 }
+
 std::map<int, std::map<int, int> > bookRecommend::read_ratings()
 {
 	/*
@@ -132,6 +148,7 @@ void bookRecommend::show_ratings_map(std::map <int, std::map<int, int> > &m)
 		std::cout << "\n";
 	}
 }
+
 template<typename TK, typename TV>
 void bookRecommend::extract_keys(std::map<TK, TV> & m, std::set<TK> &keys)
 {
@@ -140,6 +157,7 @@ void bookRecommend::extract_keys(std::map<TK, TV> & m, std::set<TK> &keys)
 		keys.insert((*it).first);
 	}
 }
+
 int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &user2)
 {
 	/*
@@ -186,6 +204,7 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 	else
 		return score;
 }
+
 int bookRecommend::LevenshteinDistance(std::string s, int len_s, std::string t, int len_t)
 {
 	// From Wikipedia: https://en.wikipedia.org/wiki/Levenshtein_distance
@@ -257,13 +276,15 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 
 			if (b_title == searchItem)
 			{
-				return (*m_it).second;
+				return (*m_it).first;
 			}
 			
 		}
+		std::cout << "Book not found, did you mean this book? ";
 		return -1;
 	}
 }
+
 bool bookRecommend::updateBook(std::map <int, std::string>& b_list, int isbn, int userID)
 {
 	// To update:
@@ -289,6 +310,7 @@ bool bookRecommend::updateBook(std::map <int, std::string>& b_list, int isbn, in
 		return false; //book could not be rated
 	}
 }
+
 int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 {
 	double maxVal = 0, val;
