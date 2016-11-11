@@ -4,7 +4,7 @@ using namespace std;
 
 bookRecommend::bookRecommend()
 {
-	//
+	menu();
 }
 void bookRecommend::menu()
 {
@@ -87,7 +87,7 @@ void bookRecommend::read_two_column_list(std::map<K, T> &m, std::string fileName
 
 	inputFile.close();
 }
-std::map<int, std::map<int, int>> bookRecommend::read_ratings()
+std::map<int, std::map<int, int> > bookRecommend::read_ratings()
 {
 	/*
 	* User ID -> ISBN -> Rating
@@ -156,6 +156,7 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 	std::set<int> isbn_list;
 	std::map<int, int>::iterator it1, it2;
 
+	int count = 0;
 	double numerator = 0, denominator = 0, score;
 
 	//it = m.find(searchItem);
@@ -168,6 +169,7 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 	{
 		if (user1.find(*it) != user1.end() && user2.find(*it) != user2.end())
 		{
+			count ++;
 			// If found with both users
 			numerator += std::min(user1[*it], user2[*it]);
 			denominator += std::max(user1[*it], user2[*it]);
@@ -179,8 +181,10 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 	score = (numerator / denominator) * 100.0;
 
 	//std::cout << score << std::endl;
-
-	return score;
+	if (count == user2.size())
+		return 0;
+	else
+		return score;
 }
 int bookRecommend::LevenshteinDistance(std::string s, int len_s, std::string t, int len_t)
 {
@@ -201,6 +205,7 @@ int bookRecommend::LevenshteinDistance(std::string s, int len_s, std::string t, 
 	/* return minimum of delete char from s, delete char from t, and delete char from both */
 	return std::min(std::min(LevenshteinDistance(s, len_s - 1, t, len_t) + 1, LevenshteinDistance(s, len_s, t, len_t - 1) + 1), LevenshteinDistance(s, len_s - 1, t, len_t - 1) + cost);
 }
+
 template<class TA, class KA>
 bool bookRecommend::findItem(std::map<TA, KA> &m, TA searchItem)
 {
@@ -210,10 +215,12 @@ bool bookRecommend::findItem(std::map<TA, KA> &m, TA searchItem)
 
 	return (it != m.end());
 }
+
 int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 {
 	std::string searchItem;
 	std::cout << "Enter ISBN/book title to search database: ";
+	getline(std::cin, searchItem);
 	getline(std::cin, searchItem);
 
 	// remove spaces
@@ -239,13 +246,25 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 		//converts the searchItem string to lower case
 		std::transform(searchItem.begin(), searchItem.end(), searchItem.begin(), ::tolower);
 		// Search through book titles
-		if (findItem(book_list, searchItem))
+		string b_title;
+		for (std::map<int, std::string>::iterator m_it = book_list.begin(); m_it != book_list.end(); ++m_it)
 		{
+			b_title = (*m_it).second;
+			b_title.erase(std::remove(b_title.begin(), b_title.end(), ' '), b_title.end());
+			std::transform(b_title.begin(), b_title.end(), b_title.begin(), ::tolower);
+			b_title.erase(std::remove(b_title.begin(), b_title.end(), '\n'), b_title.end());
 
+			std::cout << "##lalal -----" << b_title << "--" << std::endl;
+			std::cout << "##BLBLL -----" << searchItem << "--" << std::endl;
+
+			if (b_title == searchItem)
+			{
+				std::cout << "FOund" << std::endl;
+				return (*m_it).first;
+			}
+			
 		}
-		else
-			return -1;
-
+		return -1;
 	}
 }
 bool bookRecommend::updateBook(std::map <int, std::string>& b_list, int isbn, int userID)
@@ -273,10 +292,10 @@ bool bookRecommend::updateBook(std::map <int, std::string>& b_list, int isbn, in
 		return false; //book could not be rated
 	}
 }
-int bookRecommend::recommendBook(std::map <int, std::map<int, int>> ratings, int userId)
+int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 {
 	double maxVal = 0, val;
-	int u;
+	int u, maxRating = 0, recomBook;
 	for (int i = 0; i < ratings.size(); ++i)
 	{
 		if (i != userId)
@@ -289,11 +308,26 @@ int bookRecommend::recommendBook(std::map <int, std::map<int, int>> ratings, int
 			}
 		}
 	}
-
-	// check if that user has more books
-	// find first unrated book
-	// recommend the book
-
+	
+	// [✓] check if that user has more books
 	std::cout << " u = " << u << std::endl;
-	return u;
+
+	// [✓] find first unrated book
+	for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
+	{
+		if ((*it).second > maxRating && ratings[userId].find((*it).first) != ratings[u].end())
+		{
+			maxRating = (*it).second;
+			recomBook = (*it).first;
+		}
+	}
+
+	// [✓] recommend the book
+	return recomBook;
+}
+
+int main()
+{
+	bookRecommend bi;
+	return 0;
 }

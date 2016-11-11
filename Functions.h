@@ -18,7 +18,7 @@ private:
 	void show_map(std::map<K, T> &m);
 	template<class K, class T>
 	void read_two_column_list(std::map<K, T> &m, std::string fileName);
-	std::map<int, std::map<int, int>> read_ratings();
+	std::map<int, std::map<int, int> > read_ratings();
 	void show_ratings_map(std::map <int, std::map<int, int> > &m);
 	template<typename TK, typename TV>
 	void extract_keys(std::map<TK, TV> & m, std::set<TK> &keys);
