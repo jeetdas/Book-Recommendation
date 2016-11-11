@@ -39,9 +39,10 @@ void bookRecommend::menu()
 
 	while (true)
 	{
-		std::cout << "1. Search book" << std::endl;
-		std::cout << "2. Rate book" << std::endl;
-		std::cout << "3. Recommend a book" << std::endl;
+		std::cout << "Hello, " << user_list[inputUserID] << "\n\n";
+		std::cout << "1. Search a book" << std::endl;
+		std::cout << "2. Rate a book" << std::endl;
+		std::cout << "3. Recommend me a book" << std::endl;
 		std::cout << "4. Quit" << std::endl;
 
 		std::cin >> option;
