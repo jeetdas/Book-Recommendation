@@ -1,6 +1,4 @@
 #include "Functions.h"
-#include <iostream>
-using namespace std;
 
 bookRecommend::bookRecommend()
 {
@@ -99,15 +97,20 @@ template<class K, class T>
 void bookRecommend::read_two_column_list(std::map<K, T> &m, std::string fileName)
 {
 	/*
-	* Key -> Value
-	*/
+	 * Key -> Value
+	 */
 
 	K key;
 	T data;
-	std::ifstream inputFile("./Sample Data/" + fileName);
+	std::ifstream inputFile;
+	inputFile.open(fileName);
 
 	if (!inputFile)
+	{
 		std::cerr << "Could not open the file: " << fileName << std::endl;
+		system("pause");
+		exit(1);
+	}
 	else
 	{
 		getline(inputFile, data); // Skip the header
@@ -140,10 +143,14 @@ std::map<int, std::map<int, int> > bookRecommend::read_ratings()
 	int isbn;
 	std::string temp;
 
-	std::ifstream inputFile("./Sample Data/ratings.txt");
+	std::ifstream inputFile("ratings.txt");
 
 	if (!inputFile)
+	{
 		std::cerr << "Could not open the file: ratings.txt" << std::endl;
+		system("pause");
+		exit(1);
+	}
 	else
 	{
 		getline(inputFile, temp); // Skip the header
@@ -228,15 +235,17 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 int bookRecommend::LevenshteinDistance(std::string s, std::string t)
 {
 	// From Wikipedia: https://en.wikipedia.org/wiki/Levenshtein_distance
+
 	// degenerate cases
 	int cost;
     if (s == t) return 0;
+
     if (s.length() == 0) return t.length();
     if (t.length() == 0) return s.length();
 
     // create two work vectors of integer distances
-    int v0[t.length() + 1];
-    int v1[t.length() + 1];
+	std::vector <int> v0(t.length() + 1);
+	std::vector <int> v1(t.length() + 1);
 
     // initialize v0 (the previous row of distances)
     // this row is A[0][i]: edit distance for an empty s
@@ -284,12 +293,12 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 	getline(std::cin, searchItem);
 	getline(std::cin, searchItem);
 
-	// remove spaces
+	// Remove spaces
 	searchItem.erase(std::remove(searchItem.begin(), searchItem.end(), ' '), searchItem.end());
 
 	if (searchItem.find_first_not_of("0123456789") == std::string::npos)
 	{
-		// it's a number, so search using ISBN
+		// It's a number, so search using ISBN
 		int t = std::stoi(searchItem, nullptr, 10);
 		if (findItem(book_list, t))
 		{
@@ -304,18 +313,18 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 	}
 	else
 	{
-		//converts the searchItem string to lower case
+		// Converts the searchItem string to lower case
 		std::transform(searchItem.begin(), searchItem.end(), searchItem.begin(), ::tolower);
 		// Search through book titles
-		string b_title = "-1", alternativeBook;
-		int alternativeBookIsbn;
-		int score = 999, tempScore;
+		std::string b_title = "-1", alternativeBook;
+		int alternativeBookIsbn, score = std::numeric_limits<int>::max(), tempScore;
+		
 		for (std::map<int, std::string>::iterator m_it = book_list.begin(); m_it != book_list.end(); ++m_it)
 		{
 			b_title = (*m_it).second;
 
-			b_title.erase(std::remove(b_title.begin(), b_title.end(), ' '), b_title.end());
 			std::transform(b_title.begin(), b_title.end(), b_title.begin(), ::tolower);
+			b_title.erase(std::remove(b_title.begin(), b_title.end(), ' '), b_title.end());
 			b_title.erase(std::remove(b_title.begin(), b_title.end(), '\n'), b_title.end());
 
 			if (b_title == searchItem)
@@ -355,7 +364,7 @@ bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int 
 	{
 		int new_rating;
 		bool valid = false;
-		std::ofstream outputFile("./Sample Data/ratings.txt", std::fstream::app); //outstream for file
+		std::ofstream outputFile("ratings.txt", std::fstream::app); //outstream for file
 		while (!valid)
 		{
 			std::cout << "Enter a rating between 1-5: ";
@@ -406,15 +415,17 @@ int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, in
 	
 	// [✓] check if that user has more books
 	//std::cout << " u = " << u << std::endl;
-
+	
 	// [✓] find first unrated book
+	std::map<int, int>::iterator temp;
 	for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
-	{
-		if ((*it).second > maxRating && ratings[userId].find((*it).first) != ratings[u].end())
+	{	
+		if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0)
 		{
 			maxRating = (*it).second;
 			recomBook = (*it).first;
 		}
+		
 	}
 
 	// [✓] recommend the book

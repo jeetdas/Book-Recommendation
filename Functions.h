@@ -5,7 +5,8 @@
 #include <set>
 #include <string>
 #include <algorithm>
-
+#include <vector>
+#include <limits.h>
 
 class bookRecommend
 {
