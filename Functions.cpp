@@ -21,17 +21,31 @@ void bookRecommend::menu()
 
 	//show_map(book_list);
 	//show_ratings_map(ratings);
+	int searchedBookISBN = -1, recISBN, inputUserID;
+	bool valid = false;
+	while (!valid)
+	{
+		std::cout << "Input your user ID: ";
+		std::cin >> inputUserID;
+		if (inputUserID >= 0 && inputUserID <= 9)
+		{
+			valid = !valid;
+		}
+		else
+		{
+			std::cout << "Invalid user ID, please enter again" << std::endl;
+		}
+	}
 
 	while (true)
 	{
 		std::cout << "1. Search book" << std::endl;
 		std::cout << "2. Rate book" << std::endl;
 		std::cout << "3. Recommend a book" << std::endl;
-		std::cout << "4. Quit (Please choose this option to protect your data)" << std::endl;
+		std::cout << "4. Quit" << std::endl;
 
 		std::cin >> option;
 
-		int searchedBookISBN = -1, recISBN;
 		switch (option)
 		{
 		case 1:
@@ -42,17 +56,22 @@ void bookRecommend::menu()
 			}
 			break;
 		case 2:
-			if (searchedBookISBN != -1)
-			{
-				updateBook(book_list, searchedBookISBN, 6);
-			}
-			else
+			if (searchedBookISBN == -1)
 			{
 				searchedBookISBN = searchBook(book_list);
 				if (searchedBookISBN != -1)
 				{
 					std::cout << "Book found" << std::endl;
+					updateBook(ratings, searchedBookISBN, inputUserID);
 				}
+				else
+				{
+					std::cout << "Book not found" << std::endl;
+				}
+			}
+			else
+			{
+				updateBook(ratings, searchedBookISBN, inputUserID);
 			}
 			break;
 		case 3:
@@ -60,7 +79,7 @@ void bookRecommend::menu()
 			std::cout << "Recommended Book -> " << book_list[recISBN] << std::endl;
 			break;
 		case 4:
-			//exit();
+			exit(0);
 			break;
 		}
 	}
@@ -205,24 +224,46 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 		return score;
 }
 
-int bookRecommend::LevenshteinDistance(std::string s, int len_s, std::string t, int len_t)
+int bookRecommend::LevenshteinDistance(std::string s, std::string t)
 {
 	// From Wikipedia: https://en.wikipedia.org/wiki/Levenshtein_distance
-
+	// degenerate cases
 	int cost;
+    if (s == t) return 0;
+    if (s.length() == 0) return t.length();
+    if (t.length() == 0) return s.length();
 
-	/* base case: empty strings */
-	if (len_s == 0) return len_t;
-	if (len_t == 0) return len_s;
+    // create two work vectors of integer distances
+    int v0[t.length() + 1];
+    int v1[t.length() + 1];
 
-	/* test if last characters of the strings match */
-	if (s[len_s - 1] == t[len_t - 1])
-		cost = 0;
-	else
-		cost = 1;
+    // initialize v0 (the previous row of distances)
+    // this row is A[0][i]: edit distance for an empty s
+    // the distance is just the number of characters to delete from t
+    for (int i = 0; i < t.length() + 1; i++)
+        v0[i] = i;
 
-	/* return minimum of delete char from s, delete char from t, and delete char from both */
-	return std::min(std::min(LevenshteinDistance(s, len_s - 1, t, len_t) + 1, LevenshteinDistance(s, len_s, t, len_t - 1) + 1), LevenshteinDistance(s, len_s - 1, t, len_t - 1) + cost);
+    for (int i = 0; i < s.length(); i++)
+    {
+        // calculate v1 (current row distances) from the previous row v0
+
+        // first element of v1 is A[i+1][0]
+        //   edit distance is delete (i+1) chars from s to match empty t
+        v1[0] = i + 1;
+
+        // use formula to fill in the rest of the row
+        for (int j = 0; j < t.length(); j++)
+        {
+            cost = (s[i] == t[j]) ? 0 : 1;
+            v1[j + 1] = std::min(std::min(v1[j] + 1, v0[j + 1] + 1), v0[j] + cost);
+        }
+
+        // copy v1 (current row) to v0 (previous row) for next iteration
+        for (int j = 0; j < t.length() + 1; j++)
+            v0[j] = v1[j];
+    }
+
+    return v1[t.length()];
 }
 
 template<class TA, class KA>
@@ -265,7 +306,9 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 		//converts the searchItem string to lower case
 		std::transform(searchItem.begin(), searchItem.end(), searchItem.begin(), ::tolower);
 		// Search through book titles
-		string b_title;
+		string b_title = "-1", alternativeBook;
+		int alternativeBookIsbn;
+		int score = 999, tempScore;
 		for (std::map<int, std::string>::iterator m_it = book_list.begin(); m_it != book_list.end(); ++m_it)
 		{
 			b_title = (*m_it).second;
@@ -278,28 +321,60 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 			{
 				return (*m_it).first;
 			}
-			
+			else
+			{
+				tempScore = LevenshteinDistance(b_title, searchItem);
+				//std::cout << "TEMP SCORE = " << tempScore << std::endl;
+				if (tempScore < score)
+				{
+					score = tempScore;
+					alternativeBook = (*m_it).second;
+					alternativeBookIsbn = (*m_it).first;
+				}
+			}
 		}
-		std::cout << "Book not found, did you mean this book? ";
+		char opt;
+		std::cout << "Book not found, did you mean this book? " << alternativeBook << std::endl;
+		std::cout << "Y/N?" << std::endl;
+		std::cin >> opt;
+		if (opt == 'y' || opt == 'Y')
+		{
+			return alternativeBookIsbn;
+		}
+
 		return -1;
 	}
 }
 
-bool bookRecommend::updateBook(std::map <int, std::string>& b_list, int isbn, int userID)
+bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int isbn, int userID)
 {
 	// To update:
-	int new_rating;
 	// save to respective files
-	if (findItem(b_list, isbn))// if ISBN is found
+	if (ratings[userID].find(isbn) != ratings[userID].end())// if ISBN is found
 	{
-		std::ofstream outputFile("./Sample Data/ratings.txt"); //outstream for file
-		std::cout << "Enter a rating between 1-5";
-		std::cin >> new_rating;
-		b_list[isbn] = new_rating; //updates the map
-
-		while (outputFile.good())
+		int new_rating;
+		bool valid = false;
+		std::ofstream outputFile("./Sample Data/ratings.txt", std::fstream::app); //outstream for file
+		while (!valid)
 		{
-			outputFile << userID << ", " << new_rating << ", " << isbn; //updates the file for new rated book
+			std::cout << "Enter a rating between 1-5: ";
+			std::cin >> new_rating;
+			if (new_rating >= 1 && new_rating <= 5)
+			{
+				valid = !valid;
+			}
+			else
+			{
+				std::cout << "Please enter a valid rating between 1 and 5" << std::endl;
+			}
+		}
+		
+		//b_list[isbn] = new_rating; //updates the map
+		ratings[userID][isbn] = new_rating;
+
+		if (outputFile.good())
+		{
+			outputFile <<  "\n" << userID << ", " << new_rating << ", " << isbn ; //updates the file for new rated book
 		}
 		outputFile.close();
 		return true; //everything worked
@@ -329,7 +404,7 @@ int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, in
 	}
 	
 	// [✓] check if that user has more books
-	std::cout << " u = " << u << std::endl;
+	//std::cout << " u = " << u << std::endl;
 
 	// [✓] find first unrated book
 	for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
