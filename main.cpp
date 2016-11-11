@@ -28,7 +28,7 @@ bool findItem(std::map<TA, KA> &m, TA searchItem);
 
 int searchBook(std::map <int, std::string> &book_list);
 
-bool updateBook(std::map <int, std::string> b_list, int isbn, int userID);
+bool updateBook(std::map <int, std::string> &b_list, int isbn, int userID);
 
 int recommendBook(std::map <int, std::map<int, int> > ratings, int userId);
 
@@ -89,7 +89,7 @@ void menu()
 	}
 }
 
-bool updateBook(std::map<int, std::string> b_list, int isbn, int userID)
+bool updateBook(std::map<int, std::string> &b_list, int isbn, int userID)
 {
 	// To update:
 	int new_rating;
@@ -321,8 +321,16 @@ int searchBook(std::map <int, std::string> &book_list)
 	}
 	else
 	{
+		//converts the searchItem string to lower case
+		std::transform(searchItem.begin(), searchItem.end(), searchItem.begin(), ::tolower);
 		// Search through book titles
-		return -1;
+		if (findItem(book_list, searchItem))
+		{
+
+		}
+		else
+			return -1;
+
 	}
 }
 
