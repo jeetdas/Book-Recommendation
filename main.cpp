@@ -28,7 +28,7 @@ bool findItem(std::map<TA, KA> &m, TA searchItem);
 
 int searchBook(std::map <int, std::string> &book_list);
 
-bool updateBook(std::map <int, std::string> b_list ,int isbn, int userID);
+bool updateBook(std::map <int, std::string> b_list, int isbn, int userID);
 
 int recommendBook(std::map <int, std::map<int, int> > ratings, int userId);
 
@@ -41,7 +41,6 @@ int main()
 
 	return 0;
 }
-
 
 void menu()
 {
@@ -70,33 +69,30 @@ void menu()
 		switch (option)
 		{
 			int searchedBookISBN, recISBN;
-			case 1:
-				searchedBookISBN = searchBook(book_list);
-				break;
-			case 2:
-				if (searchedBookISBN != -1)
-				{
-					updateBook(book_list, searchedBookISBN);
-				}
-				break;
-			case 3:
-				recISBN = recommendBook(ratings, 6);
-				std::cout << "Recommended Book -> " << book_list[recISBN] << std::endl;
-				break;
-			case 4:
-				//exit();
-				break;
+		case 1:
+			searchedBookISBN = searchBook(book_list);
+			break;
+		case 2:
+			if (searchedBookISBN != -1)
+			{
+				updateBook(book_list, searchedBookISBN, 6);
+			}
+			break;
+		case 3:
+			recISBN = recommendBook(ratings, 6);
+			std::cout << "Recommended Book -> " << book_list[recISBN] << std::endl;
+			break;
+		case 4:
+			//exit();
+			break;
 		}
 	}
 }
 
-//update
 bool updateBook(std::map<int, std::string> b_list, int isbn, int userID)
 {
-
 	// To update:
 	int new_rating;
-
 	// save to respective files
 	if (findItem(b_list, isbn))// if ISBN is found
 	{
@@ -104,9 +100,10 @@ bool updateBook(std::map<int, std::string> b_list, int isbn, int userID)
 		std::cout << "Enter a rating between 1-5";
 		std::cin >> new_rating;
 		b_list[isbn] = new_rating; //updates the map
+
 		while (outputFile.good())
 		{
-			outputFile << usrID << ", " << new_rating << ", " << isbn; //updates the file for new rated book
+			outputFile << userID << ", " << new_rating << ", " << isbn; //updates the file for new rated book
 		}
 		outputFile.close();
 		return true; //everything worked
@@ -141,8 +138,8 @@ template<class K, class T>
 void read_two_column_list(std::map<K, T> &m, std::string fileName)
 {
 	/*
-	 * Key -> Value
-	 */
+	* Key -> Value
+	*/
 
 	K key;
 	T data;
@@ -168,14 +165,14 @@ void read_two_column_list(std::map<K, T> &m, std::string fileName)
 std::map<int, std::map<int, int> > read_ratings()
 {
 	/*
-	 * User ID -> ISBN -> Rating
-	 *            ISBN -> Rating
-	 *            ISBN -> Rating
-	 *
-	 * User ID -> ISBN -> Rating
-	 *            ISBN -> Rating
-	 *            ISBN -> Rating
-	 */
+	* User ID -> ISBN -> Rating
+	*            ISBN -> Rating
+	*            ISBN -> Rating
+	*
+	* User ID -> ISBN -> Rating
+	*            ISBN -> Rating
+	*            ISBN -> Rating
+	*/
 
 	std::map<int, std::map<int, int> > user_ratings;
 	int id, rating;
@@ -213,15 +210,15 @@ void extract_keys(std::map<TK, TV> & m, std::set<TK> &keys)
 int jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &user2)
 {
 	/*
-	 * Algorithm:
-	 *
-	 * 1. Get all ISBNs for both users and put into a set (only unique elements that way).
-	 * 2. Cycle through both users for those ISBN ratings.
-	 * 3. If found with both users, add minimum score to numerator.
-	 *    Else, add minimum (zero) to numerator.
-	 * 4. If found with both users, add maximum score to denominator.
-	 *    Else, add maximum (five) to denominator.
-	 */
+	* Algorithm:
+	*
+	* 1. Get all ISBNs for both users and put into a set (only unique elements that way).
+	* 2. Cycle through both users for those ISBN ratings.
+	* 3. If found with both users, add minimum score to numerator.
+	*    Else, add minimum (zero) to numerator.
+	* 4. If found with both users, add maximum score to denominator.
+	*    Else, add maximum (five) to denominator.
+	*/
 
 	std::set<int> isbn_list;
 	std::map<int, int>::iterator it1, it2;
@@ -246,7 +243,7 @@ int jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &us
 		}
 	}
 
-	score = (numerator/denominator) * 100.0;
+	score = (numerator / denominator) * 100.0;
 
 	//std::cout << score << std::endl;
 
@@ -289,13 +286,13 @@ int LevenshteinDistance(std::string s, int len_s, std::string t, int len_t)
 	if (len_t == 0) return len_s;
 
 	/* test if last characters of the strings match */
-	if (s[len_s-1] == t[len_t-1])
+	if (s[len_s - 1] == t[len_t - 1])
 		cost = 0;
 	else
 		cost = 1;
 
 	/* return minimum of delete char from s, delete char from t, and delete char from both */
- 	return std::min(std::min(LevenshteinDistance(s, len_s - 1, t, len_t) + 1, LevenshteinDistance(s, len_s, t, len_t - 1) + 1), LevenshteinDistance(s, len_s - 1, t, len_t - 1) + cost);
+	return std::min(std::min(LevenshteinDistance(s, len_s - 1, t, len_t) + 1, LevenshteinDistance(s, len_s, t, len_t - 1) + 1), LevenshteinDistance(s, len_s - 1, t, len_t - 1) + cost);
 }
 
 int searchBook(std::map <int, std::string> &book_list)
@@ -305,12 +302,12 @@ int searchBook(std::map <int, std::string> &book_list)
 	getline(std::cin, searchItem);
 
 	// remove spaces
-	searchItem.erase(std::remove(searchItem.begin(),searchItem.end(),' '), searchItem.end());
+	searchItem.erase(std::remove(searchItem.begin(), searchItem.end(), ' '), searchItem.end());
 
 	if (searchItem.find_first_not_of("0123456789") == std::string::npos)
 	{
 		// it's a number, so search using ISBN
-		int t = std::stoi (searchItem, nullptr, 10);
+		int t = std::stoi(searchItem, nullptr, 10);
 		if (findItem(book_list, t))
 		{
 			std::cout << book_list[t] << std::endl;
@@ -325,25 +322,6 @@ int searchBook(std::map <int, std::string> &book_list)
 	else
 	{
 		// Search through book titles
-		
-		searchItem.erase( remove( searchItem.begin(), searchItem.end(), ' ' ), searchItem.end() );
-		(string)lolower(searchItem);
-
-		if(findItem(searchItem, )) //not sure what to put 
-			{
-				
-				std::cout << book_list[b] << std::endl;
-				return b;
-			}
-		else
-		{
-			std::cout <<"Book Not Found" << std::endl;
-			return -1;
-		}
-
-
-
-
 		return -1;
 	}
 }
