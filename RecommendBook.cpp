@@ -1,4 +1,4 @@
-#include "Functions.h"
+#include "RecommendBook.h"
 
 bookRecommend::bookRecommend()
 {
@@ -7,20 +7,31 @@ bookRecommend::bookRecommend()
 
 void bookRecommend::menu()
 {
-	int option = 0;
-
 	std::map <int, std::string> book_list;
 	std::map <int, std::string> user_list;
 	std::map <int, std::map<int, int> > ratings;
 
-	read_two_column_list(book_list, "books.txt");
-	read_two_column_list(user_list, "customers.txt");
-	ratings = read_ratings();
+	#pragma omp sections
+	{
+		#pragma omp section
+		{
+			read_two_column_list(book_list, "books.txt");
+		}
+		#pragma omp section
+		{
+			read_two_column_list(user_list, "customers.txt");
+		}
+		#pragma omp section
+		{
+			ratings = read_ratings();
+		}
+	}
 
-	//show_map(book_list);
-	//show_ratings_map(ratings);
-	int searchedBookISBN = -1, recISBN, inputUserID;
+	int searchedBookISBN, recISBN, inputUserID, option;
+	searchedBookISBN = -1;
+	option = 0;
 	bool valid = false;
+
 	while (!valid)
 	{
 		std::cout << "Input your user ID: ";
@@ -74,22 +85,13 @@ void bookRecommend::menu()
 			}
 			break;
 		case 3:
-			recISBN = recommendBook(ratings, 6);
+			recISBN = recommendBook(ratings, inputUserID);
 			std::cout << "Recommended Book -> " << book_list[recISBN] << std::endl;
 			break;
 		case 4:
 			exit(0);
 			break;
 		}
-	}
-}
-
-template<class K, class T>
-void bookRecommend::show_map(std::map<K, T> &m)
-{
-	for (typename std::map <K, T>::iterator it = m.begin(); it != m.end(); ++it)
-	{
-		std::cout << it->first << " --> " << it->second << "\n";
 	}
 }
 
@@ -166,16 +168,6 @@ std::map<int, std::map<int, int> > bookRecommend::read_ratings()
 	return user_ratings;
 }
 
-void bookRecommend::show_ratings_map(std::map <int, std::map<int, int> > &m)
-{
-	for (std::map <int, std::map<int, int> >::iterator it = m.begin(); it != m.end(); ++it)
-	{
-		std::cout << it->first << " --> ";
-		show_map(it->second);
-		std::cout << "\n";
-	}
-}
-
 template<typename TK, typename TV>
 void bookRecommend::extract_keys(std::map<TK, TV> & m, std::set<TK> &keys)
 {
@@ -193,19 +185,18 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 	* 1. Get all ISBNs for both users and put into a set (only unique elements that way).
 	* 2. Cycle through both users for those ISBN ratings.
 	* 3. If found with both users, add minimum score to numerator.
-	*    Else, add minimum (zero) to numerator.
 	* 4. If found with both users, add maximum score to denominator.
-	*    Else, add maximum (five) to denominator.
 	*/
 
 	std::set<int> isbn_list;
 	std::map<int, int>::iterator it1, it2;
 
-	int count = 0;
-	double numerator = 0, denominator = 0, score;
+	int count;
+	double numerator, denominator, score;
 
-	//it = m.find(searchItem);
-	//return (it != m.end());
+	count = 0;
+	numerator = 0;
+	denominator = 0;
 
 	extract_keys(user1, isbn_list);
 	extract_keys(user2, isbn_list);
@@ -215,17 +206,13 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 		if (user1.find(*it) != user1.end() && user2.find(*it) != user2.end())
 		{
 			count ++;
-			// If found with both users
 			numerator += std::min(user1[*it], user2[*it]);
 			denominator += std::max(user1[*it], user2[*it]);
-
-			//std::cout << " -> " << numerator << " / " << denominator << std::endl;
 		}
 	}
 
 	score = (numerator / denominator) * 100.0;
 
-	//std::cout << score << std::endl;
 	if (count == user2.size())
 		return 0;
 	else
@@ -250,6 +237,7 @@ int bookRecommend::LevenshteinDistance(std::string s, std::string t)
     // initialize v0 (the previous row of distances)
     // this row is A[0][i]: edit distance for an empty s
     // the distance is just the number of characters to delete from t
+	#pragma omp parallel for
     for (int i = 0; i < t.length() + 1; i++)
         v0[i] = i;
 
@@ -262,13 +250,14 @@ int bookRecommend::LevenshteinDistance(std::string s, std::string t)
         v1[0] = i + 1;
 
         // use formula to fill in the rest of the row
-        for (int j = 0; j < t.length(); j++)
+		for (int j = 0; j < t.length(); j++)
         {
             cost = (s[i] == t[j]) ? 0 : 1;
-            v1[j + 1] = std::min(std::min(v1[j] + 1, v0[j + 1] + 1), v0[j] + cost);
+			v1[j + 1] = std::min(std::min(v1[j] + 1, v0[j + 1] + 1), v0[j] + cost);
         }
 
         // copy v1 (current row) to v0 (previous row) for next iteration
+		#pragma omp parallel for
         for (int j = 0; j < t.length() + 1; j++)
             v0[j] = v1[j];
     }
@@ -279,10 +268,7 @@ int bookRecommend::LevenshteinDistance(std::string s, std::string t)
 template<class TA, class KA>
 bool bookRecommend::findItem(std::map<TA, KA> &m, TA searchItem)
 {
-	typename std::map<TA, KA>::iterator it;
-
-	it = m.find(searchItem);
-
+	typename std::map<TA, KA>::iterator it = m.find(searchItem);
 	return (it != m.end());
 }
 
@@ -343,6 +329,7 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 				}
 			}
 		}
+
 		char opt;
 		std::cout << "Book not found, did you mean this book? " << alternativeBook << std::endl;
 		std::cout << "Y/N?" << std::endl;
@@ -378,8 +365,7 @@ bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int 
 				std::cout << "Please enter a valid rating between 1 and 5" << std::endl;
 			}
 		}
-		
-		//b_list[isbn] = new_rating; //updates the map
+	
 		ratings[userID][isbn] = new_rating;
 
 		if (outputFile.good())
@@ -399,37 +385,46 @@ bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int 
 int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 {
 	double maxVal = 0, val;
-	int u, maxRating = 0, recomBook;
+	int u, maxRating, recomBook;
+	#pragma parallel for
 	for (int i = 0; i < ratings.size(); ++i)
 	{
 		if (i != userId)
 		{
 			val = jaccard_index_similarity(ratings[userId], ratings[i]);
-			if (maxVal < val)
+			#pragma omp critical
 			{
-				maxVal = val;
-				u = i;
+				if (maxVal < val)
+				{
+					maxVal = val;
+					u = i;
+				}
 			}
 		}
 	}
 	
 	// [✓] check if that user has more books
-	//std::cout << " u = " << u << std::endl;
 	
 	// [✓] find first unrated book
-	std::map<int, int>::iterator temp;
-	for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
-	{	
-		if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0)
+	int recommendBookList[5];
+	#pragma omp parallel for
+	for (int i = 0; i < 5; ++i)
+	{
+		maxRating = 0;
+		for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
 		{
-			maxRating = (*it).second;
-			recomBook = (*it).first;
+			if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0 && std::find(std::begin(recommendBookList), std::end(recommendBookList), (*it).first) != std::end(recommendBookList))
+			{
+				maxRating = (*it).second;
+				recomBook = (*it).first;
+			}
+
 		}
-		
+		recommendBookList[i] = recomBook;
 	}
 
 	// [✓] recommend the book
-	return recomBook;
+	return recommendBookList;
 }
 
 int main()
