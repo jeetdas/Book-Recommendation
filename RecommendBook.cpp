@@ -4,13 +4,14 @@ bookRecommend::bookRecommend()
 {
 	menu();
 }
-
+//Reads in the files for the map, displays options for the user. 
 void bookRecommend::menu()
 {
 	std::map <int, std::string> book_list;
 	std::map <int, std::string> user_list;
 	std::map <int, std::map<int, int> > ratings;
 
+	//parallel sections for reading in the files and storing them
 	#pragma omp sections
 	{
 		#pragma omp section
@@ -107,7 +108,7 @@ void bookRecommend::menu()
 		}
 	}
 }
-
+//reads in data for the map
 template<class K, class T>
 void bookRecommend::read_two_column_list(std::map<K, T> &m, std::string fileName)
 {
@@ -181,6 +182,7 @@ std::map<int, std::map<int, int> > bookRecommend::read_ratings()
 	return user_ratings;
 }
 
+//extracts all the keys from the map
 template<typename TK, typename TV>
 void bookRecommend::extract_keys(std::map<TK, TV> & m, std::set<TK> &keys)
 {
@@ -190,6 +192,7 @@ void bookRecommend::extract_keys(std::map<TK, TV> & m, std::set<TK> &keys)
 	}
 }
 
+//equation to compare two users and find the most similar using Jaccard similarity coefficient. 
 int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map <int, int> &user2)
 {
 	/*
@@ -232,6 +235,8 @@ int bookRecommend::jaccard_index_similarity(std::map <int, int> &user1, std::map
 		return score;
 }
 
+/*calculates and compares the number of changes an input book title goes through with every book title in the books file, 
+	the book that has the least changes is most likely the correct book to be used*/
 int bookRecommend::LevenshteinDistance(std::string s, std::string t)
 {
 	// From Wikipedia: https://en.wikipedia.org/wiki/Levenshtein_distance
@@ -278,6 +283,7 @@ int bookRecommend::LevenshteinDistance(std::string s, std::string t)
     return v1[t.length()];
 }
 
+//looks for the item that need to be found in the three files (i.e. books, ISBN, or user)
 template<class TA, class KA>
 bool bookRecommend::findItem(std::map<TA, KA> &m, TA searchItem)
 {
@@ -285,6 +291,7 @@ bool bookRecommend::findItem(std::map<TA, KA> &m, TA searchItem)
 	return (it != m.end());
 }
 
+//looks for a book in the book file by ISBN or book title that the user puts in
 int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 {
 	std::string searchItem;
@@ -365,7 +372,7 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 		return -1;
 	}
 }
-
+//looks for the book the user is looking for and wanting to rate and updates the rating files to reflect the added rating
 bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int isbn, int userID)
 {
 	// To update:
@@ -405,6 +412,7 @@ bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int 
 	}
 }
 
+//the user a book to read based from the jaccard function, it outputs a book to be read
 std::vector<int> bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 {
 	double maxVal = 0, val;
