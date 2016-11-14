@@ -27,7 +27,7 @@ private:
 	bool findItem(std::map<TA, KA> &m, TA searchItem);
 	int searchBook(std::map <int, std::string> &book_list);
 	bool updateBook(std::map <int, std::map<int, int> > ratings, int isbn, int userID);
-	int recommendBook(std::map <int, std::map<int, int> > ratings, int userId);
+	std::vector<int> recommendBook(std::map <int, std::map<int, int> > ratings, int userId);
 };
 
 

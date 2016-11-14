@@ -27,7 +27,8 @@ void bookRecommend::menu()
 		}
 	}
 
-	int searchedBookISBN, recISBN, inputUserID, option;
+	int searchedBookISBN, inputUserID, option;
+	std::vector <int> recISBN;
 	searchedBookISBN = -1;
 	option = 0;
 	bool valid = false;
@@ -86,7 +87,10 @@ void bookRecommend::menu()
 			break;
 		case 3:
 			recISBN = recommendBook(ratings, inputUserID);
-			std::cout << "Recommended Book -> " << book_list[recISBN] << std::endl;
+			for (int i = 0; i < recISBN.size(); ++i)
+			{
+				std::cout << "Recommended Book -> " << book_list[recISBN[i]] << std::endl;
+			}
 			break;
 		case 4:
 			exit(0);
@@ -382,7 +386,7 @@ bool bookRecommend::updateBook(std::map <int, std::map<int, int> > ratings, int 
 	}
 }
 
-int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
+std::vector<int> bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, int userId)
 {
 	double maxVal = 0, val;
 	int u, maxRating, recomBook;
@@ -406,21 +410,23 @@ int bookRecommend::recommendBook(std::map <int, std::map<int, int> > ratings, in
 	// [✓] check if that user has more books
 	
 	// [✓] find first unrated book
-	int recommendBookList[5];
-	#pragma omp parallel for
-	for (int i = 0; i < 5; ++i)
+	std::vector <int> recommendBookList;
+	//#pragma omp parallel for
+	for (int i = 0; i < 10; ++i)
 	{
 		maxRating = 0;
 		for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
 		{
-			if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0 && std::find(std::begin(recommendBookList), std::end(recommendBookList), (*it).first) != std::end(recommendBookList))
+			//#pragma omp critical
 			{
-				maxRating = (*it).second;
-				recomBook = (*it).first;
+				if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0 && std::find(std::begin(recommendBookList), std::end(recommendBookList), (*it).first) == std::end(recommendBookList))
+				{
+					maxRating = (*it).second;
+					recomBook = (*it).first;
+				}
 			}
-
 		}
-		recommendBookList[i] = recomBook;
+		recommendBookList.push_back(recomBook);
 	}
 
 	// [✓] recommend the book
