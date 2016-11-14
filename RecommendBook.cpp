@@ -11,6 +11,7 @@ void bookRecommend::menu()
 	std::map <int, std::string> user_list;
 	std::map <int, std::map<int, int> > ratings;
 
+	//parallel sections for reading in the files and storing them
 	#pragma omp sections
 	{
 		#pragma omp section
