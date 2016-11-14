@@ -41,9 +41,11 @@ void bookRecommend::menu()
 		{
 			valid = !valid;
 		}
-		else
+		else if (std::cin.fail() || !valid)
 		{
 			std::cout << "Invalid user ID, please enter again" << std::endl;
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 	}
 
@@ -56,6 +58,13 @@ void bookRecommend::menu()
 		std::cout << "4. Quit" << std::endl;
 
 		std::cin >> option;
+		if (std::cin.fail() || (option > 4 || option < 1))
+		{
+			std::cout << "Invalid option, try again." << std::endl;
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			option = 0;
+		}
 
 		switch (option)
 		{
@@ -288,8 +297,18 @@ int bookRecommend::searchBook(std::map <int, std::string> &book_list)
 
 	if (searchItem.find_first_not_of("0123456789") == std::string::npos)
 	{
+		int t;
 		// It's a number, so search using ISBN
-		int t = std::stoi(searchItem, nullptr, 10);
+		try
+		{
+			t = std::stoi(searchItem, nullptr, 10);
+		}
+		catch (const std::out_of_range)
+		{
+			std::cout << "Invalid entry" << std::endl;
+			t = -1;
+			return -1;
+		}
 		if (findItem(book_list, t))
 		{
 			std::cout << book_list[t] << std::endl;
@@ -411,19 +430,16 @@ std::vector<int> bookRecommend::recommendBook(std::map <int, std::map<int, int> 
 	
 	// [✓] find first unrated book
 	std::vector <int> recommendBookList;
-	//#pragma omp parallel for
+	//#pragma omp parallel for shared (recommendBookList)
 	for (int i = 0; i < 10; ++i)
 	{
 		maxRating = 0;
 		for (std::map<int, int>::iterator it = ratings[u].begin(); it != ratings[u].end(); ++it)
 		{
-			//#pragma omp critical
+			if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0 && std::find(std::begin(recommendBookList), std::end(recommendBookList), (*it).first) == std::end(recommendBookList))
 			{
-				if ((*it).second > maxRating && ratings[userId].count((*it).first) == 0 && std::find(std::begin(recommendBookList), std::end(recommendBookList), (*it).first) == std::end(recommendBookList))
-				{
-					maxRating = (*it).second;
-					recomBook = (*it).first;
-				}
+				maxRating = (*it).second;
+				recomBook = (*it).first;
 			}
 		}
 		recommendBookList.push_back(recomBook);
