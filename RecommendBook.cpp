@@ -2,6 +2,7 @@
 
 bookRecommend::bookRecommend()
 {
+	// Just a test
 	menu();
 }
 
